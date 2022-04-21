@@ -1,0 +1,32 @@
+#!/bin/bash
+
+sudo apt update
+
+# install Docker dependencies and runtime
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+apt-cache policy docker-ce
+sudo apt install -y docker-ce
+
+# run docker without sudo
+sudo usermod -aG docker ubuntu
+
+# enable IP forwarding
+sudo bash -c "echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf"
+sysctl -p
+
+# add Kubernetes repository
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+
+sudo apt update
+
+# install Kubernetes components
+sudo apt install -y kubeadm kubectl kubelet
+
+# update cgroupdriver
+sudo bash -c "cat docker-daemon.json > /etc/docker/daemon.json"
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker
