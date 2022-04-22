@@ -10,5 +10,3 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # configure Pod network plugin
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-
-kubeadm join 3.93.167.245:6443 --token 66bufz.ynzb9awoiekybpkm --discovery-token-ca-cert-hash sha256:a133e5b0ba188c93705136e72dcd145a7635e5f05c2db61c7b281c173a634aa2 --control-plane
