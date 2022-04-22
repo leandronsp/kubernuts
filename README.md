@@ -13,7 +13,7 @@ Deploying a Kubernetes cluster on EC2 Ubuntu 20.04.
 22          <my IP>
 80          0.0.0.0/0
 443         0.0.0.0/0
-6443        172.31.0.0/16 <-- allow nodes in the same VPC
+6443        0.0.0.0/0 <-- allow nodes in the same VPC
 10250       0.0.0.0/0     <-- allow port-fowarding using kubectl
 30000-32767 0.0.0.0/0     <-- k8s service type=NodePort exposes these range
 ```
