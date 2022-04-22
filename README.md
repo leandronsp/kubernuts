@@ -4,7 +4,7 @@ Deploying a Kubernetes cluster on EC2 Ubuntu 20.04.
 
 ## Provisioning the AWS instances
 
-* 3 nodes (1 master, 2 nodes)
+* 2 instances (1 master, 1 node)
 * Type: `t3.small`
 * 2 vCPUs
 * 2GB RAM
