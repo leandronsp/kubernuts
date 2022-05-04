@@ -1,0 +1,20 @@
+#!/bin/bash
+
+AWS_PROFILE=$1
+KEYPAIR_NAME=$2
+
+rm -f ~/.ssh/$KEYPAIR_NAME.pem
+
+aws --profile $AWS_PROFILE \
+  ec2 \
+  delete-key-pair \
+  --key-name $KEYPAIR_NAME
+
+aws --profile $AWS_PROFILE \
+  ec2 \
+  create-key-pair \
+  --key-name $KEYPAIR_NAME \
+  --key-type ed25519 \
+  | jq -r '.KeyMaterial' > ~/.ssh/$KEYPAIR_NAME.pem
+
+chmod 400 ~/.ssh/$KEYPAIR_NAME.pem

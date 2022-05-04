@@ -1,0 +1,10 @@
+#!/bin/bash
+
+AWS_PROFILE=$1
+INSTANCE_NAME=$2
+
+aws --profile $AWS_PROFILE \
+  ec2 \
+  describe-instances \
+  --filters Name=tag:Name,Values=$INSTANCE_NAME \
+  | jq -r '.Reservations[0].Instances[0].PublicIpAddress'

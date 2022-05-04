@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# parse options
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --profile)
+      AWS_PROFILE=$2
+      shift
+      shift
+      ;;
+    --instance-name)
+      INSTANCE_NAME=$2
+      shift
+      shift
+      ;;
+    --keypair-name)
+      KEYPAIR_NAME=$2
+      shift
+      shift
+      ;;
+    --security-group-name)
+      SG_NAME=$2
+      shift
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
+
+# validate options
+[ -z $AWS_PROFILE ] && \
+  echo 'Missing --profile option' && exit 1
+[ -z $KEYPAIR_NAME ] && \
+  echo 'Missing --keypair-name option' && exit 1
+[ -z $SG_NAME ] && \
+  echo 'Missing --security-group-name option' && exit 1
+[ -z $INSTANCE_NAME ] && \
+  echo 'Missing --instance-name option' && exit 1
+
+# fetch security group ID
+SG_ID=`aws --profile $AWS_PROFILE \
+         ec2 \
+         describe-security-groups \
+         --filters Name=tag:Name,Values=$SG_NAME \
+         | jq -r '.SecurityGroups[0].GroupId'`
+
+# fetch key-pair
+KEYPAIR_ID=`aws --profile $AWS_PROFILE \
+         ec2 \
+         describe-key-pairs \
+         --key-name $KEYPAIR_NAME \
+         | jq -r '.KeyPairs[0].KeyPairId'`
+
+# build security group and key-pair if not existing
+[ -z $SG_ID ] || [ $SG_ID = null ] && ./iac/build-security-group $AWS_PROFILE $SG_NAME
+[ -z $KEYPAIR_ID ] || [ $KEYPAIR_ID = null ] && ./iac/build-key-pair $AWS_PROFILE $KEYPAIR_NAME
+
+# build instance
+echo "Going to create instance $INSTANCE_NAME using sg $SG_NAME and key-pair $KEYPAIR_NAME"
+
+AMI=ami-0c4f7023847b90238 # Ubuntu 20.04 LTS
+INSTANCE_TYPE=t3.small    # 2GB RAM
+
+aws --profile $AWS_PROFILE \
+  ec2 \
+  run-instances \
+  --image-id $AMI \
+  --instance-type $INSTANCE_TYPE \
+  --key-name $KEYPAIR_NAME \
+  --security-group-ids $SG_ID \
+  --associate-public-ip-address \
+  --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$INSTANCE_NAME}]" \
+  --count 1

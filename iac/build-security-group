@@ -1,0 +1,51 @@
+#!/bin/bash
+
+AWS_PROFILE=$1
+SG_NAME=$2
+
+aws --profile $AWS_PROFILE \
+  ec2 \
+  delete-security-group \
+  --group-name $SG_NAME
+
+aws --profile $AWS_PROFILE \
+         ec2 \
+         create-security-group \
+         --group-name $SG_NAME \
+         --description "Security Group for K8s nodes" \
+         --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=$SG_NAME}]"
+
+# SSH
+aws --profile $AWS_PROFILE \
+  ec2 \
+  authorize-security-group-ingress \
+  --group-name $SG_NAME \
+  --protocol tcp --port 22 --cidr 0.0.0.0/0
+
+# HTTP
+aws --profile $AWS_PROFILE \
+  ec2 \
+  authorize-security-group-ingress \
+  --group-name $SG_NAME \
+  --protocol tcp --port 80 --cidr 0.0.0.0/0
+
+# HTTPS
+aws --profile $AWS_PROFILE \
+  ec2 \
+  authorize-security-group-ingress \
+  --group-name $SG_NAME \
+  --protocol tcp --port 443 --cidr 0.0.0.0/0
+
+# Kubernetes API
+aws --profile $AWS_PROFILE \
+  ec2 \
+  authorize-security-group-ingress \
+  --group-name $SG_NAME \
+  --protocol tcp --port 6443 --cidr 0.0.0.0/0
+
+# kubectl port-forward
+aws --profile $AWS_PROFILE \
+  ec2 \
+  authorize-security-group-ingress \
+  --group-name $SG_NAME \
+  --protocol tcp --port 10250 --cidr 0.0.0.0/0

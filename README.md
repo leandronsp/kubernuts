@@ -1,6 +1,14 @@
 # Kubernuts
 
-Deploying a Kubernetes cluster on EC2 Ubuntu 20.04.
+Deploying a Kubernetes cluster on EC2 Ubuntu 20.04 LTS.
+
+## Requirements
+
+* An AWS account
+* AWS CLI
+* jq
+* `make iac.install.macos.deps`
+* `make iac.configure profile=personal`
 
 ## Provisioning the AWS instances
 
@@ -18,42 +26,84 @@ Deploying a Kubernetes cluster on EC2 Ubuntu 20.04.
 30000-32767 0.0.0.0/0 <-- k8s service type=NodePort exposes these range
 ```
 
-## Setup
+1. Build the master node
 
-1. On each node (including master):
 ```bash
-make setup.node node=<node>
+make iac.build.instance \
+  profile=personal \
+  instance-name=k8s-master \
+  sg-name=k8s-node-sg \
+  keypair-name=aws-k8s-key
 ```
 
-2. Only master:
+2. Build the worker node
+
 ```bash
-make setup.master master=<master-node> ip=<master-public-ip>
+make iac.build.instance \
+  profile=personal \
+  instance-name=k8s-worker \
+  sg-name=k8s-node-sg \
+  keypair-name=aws-k8s-key
 ```
 
-3. On each node (not including master):
+3. Setup SSH configs
+
 ```bash
-make join.node node=<node> master=<master-node>
+# master
+make iac.setup.ssh.config \
+  profile=personal \
+  instance=k8s-master \
+  keypair=aws-k8s-key
+
+# worker
+make iac.setup.ssh.config \
+  profile=personal \
+  instance=k8s-worker \
+  keypair=aws-k8s-key
 ```
 
-4. Import kubectl config (from master):
-```bash
-make import.kubectl.config master=<master-node>
+4. Setup Nodes (install Docker, Kubernetes components and dependencies)
+  ```bash
+make iac.setup.node instance=k8s-master
+make iac.setup.node instance=k8s-worker
 ```
 
-## Running an NGINX application
+5. Initialize the Kubernetes cluster on master node
+  ```bash
+make iac.fetch.public.ip profile=personal instance=k8s-master
+make iac.setup.master instance=k8s-master publicip=<public-ip>
+```
 
-1. Run NGINX deployment/pod:
+6. Join worker node on the cluster
+```bash
+make iac.join.node instance=k8s-worker master=k8s-master
+```
+
+7. Import kubectl config
+```bash
+make import.kubectl.config master=k8s-master
+```
+
+8. Test it
+```bash
+make get.pods
+```
+
+## Deploying a simple NGINX app
+
+Create the NGINX deployment
 ```bash
 make run.nginx
 ```
 
-2. Expose the NGINX deployment via Service type=NodePort:
+Expose the NGINX deployment thru a Service
 ```bash
 make expose.nginx
 ```
 
-Now, open `http://<public-node-IP>:<node-port>` or, if you prefer doing port-forward, run:
+Port-forward the NGINX service to the localhost:4242
 ```bash
 make pf.nginx
 ```
-...and open `http://localhost:4242`. Cheers!
+
+Open `localhost:4242` and cheers!

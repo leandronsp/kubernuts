@@ -12,9 +12,23 @@ sudo apt install -y docker-ce
 # run docker without sudo
 sudo usermod -aG docker ubuntu
 
+# install git and golang
+sudo apt install -y git golang-go
+
+# configure cri-docker due to Kubernetes 1.24 no longer supporting Docker runtime
+git clone https://github.com/Mirantis/cri-dockerd.git
+cd ~/cri-dockerd
+mkdir bin
+cd src && go get && go build -o ../bin/cri-dockerd
+cd ~/cri-dockerd
+mkdir -p /usr/local/bin
+sudo install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
+sudo cp -a packaging/systemd/* /etc/systemd/system
+sudo sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+
 # enable IP forwarding
 sudo bash -c "echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf"
-sysctl -p
+sudo sysctl -p
 
 # add Kubernetes repository
 curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
@@ -26,7 +40,10 @@ sudo apt update
 sudo apt install -y kubeadm kubectl kubelet
 
 # update cgroupdriver
-sudo bash -c "cat docker-daemon.json > /etc/docker/daemon.json"
+echo '{"exec-opts": ["native.cgroupdriver=systemd"]}' | sudo tee /etc/cri-docker/daemon.json
+echo '{"exec-opts": ["native.cgroupdriver=systemd"]}' | sudo tee /etc/docker/daemon.json
 sudo systemctl daemon-reload
-sudo systemctl restart docker
+sudo systemctl enable cri-docker.service
 sudo systemctl enable docker
+sudo systemctl enable --now cri-docker.socket
+sudo systemctl restart docker

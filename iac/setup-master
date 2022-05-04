@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # init Kubernetes cluster
-sudo kubeadm init --ignore-preflight-errors=all --control-plane-endpoint "$1:6443"
+sudo kubeadm init --ignore-preflight-errors=all --control-plane-endpoint "$1:6443" --cri-socket unix:///var/run/cri-dockerd.sock
 
 # prepare config
 mkdir -p $HOME/.kube
