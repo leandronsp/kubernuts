@@ -48,8 +48,7 @@ expose.nginx:
 	@kubectl --kubeconfig=kubectl-config apply -f ./app/nginx-svc.yaml
 
 pf.nginx:
-	@kubectl --kubeconfig=kubectl-config \
-		port-forward deployment/nginx-pod 4242:80
+	@kubectl --kubeconfig=kubectl-config port-forward svc/nginx-svc 4242:80
 
 %:
 	@:
