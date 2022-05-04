@@ -30,20 +30,20 @@ Deploying a Kubernetes cluster on EC2 Ubuntu 20.04 LTS.
 
 ```bash
 make iac.build.instance \
-  profile=personal \
-  instance-name=k8s-master \
-  sg-name=k8s-node-sg \
-  keypair-name=aws-k8s-key
+     profile=personal \
+     instance-name=k8s-master \
+     sg-name=k8s-node-sg \
+     keypair-name=aws-k8s-key
 ```
 
 2. Build the worker node
 
 ```bash
 make iac.build.instance \
-  profile=personal \
-  instance-name=k8s-worker \
-  sg-name=k8s-node-sg \
-  keypair-name=aws-k8s-key
+     profile=personal \
+     instance-name=k8s-worker \
+     sg-name=k8s-node-sg \
+     keypair-name=aws-k8s-key
 ```
 
 3. Setup SSH configs
@@ -51,15 +51,15 @@ make iac.build.instance \
 ```bash
 # master
 make iac.setup.ssh.config \
-  profile=personal \
-  instance=k8s-master \
-  keypair=aws-k8s-key
+     profile=personal \
+     instance=k8s-master \
+     keypair=aws-k8s-key
 
 # worker
 make iac.setup.ssh.config \
-  profile=personal \
-  instance=k8s-worker \
-  keypair=aws-k8s-key
+     profile=personal \
+     instance=k8s-worker \
+     keypair=aws-k8s-key
 ```
 
 4. Setup Nodes (install Docker, Kubernetes components and dependencies)
